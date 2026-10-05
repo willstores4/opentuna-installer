@@ -29,8 +29,8 @@ jobs:
         if: ${{ success() }}
         uses: actions/upload-artifact@v4
         with:
-          name: OpenTuna_Installer_${{ steps.slug.outputs.sha8 }}
-          path: OpenTuna_Installer.elf
+          name: OpenTuna_WILL_Installer_${{ steps.slug.outputs.sha8 }}
+          path: OpenTuna_WILL_Installer.elf
 
       - name: Create release
         if: github.ref == 'refs/heads/main'
@@ -39,4 +39,4 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "latest"
           title: "Latest build"
-          files: OpenTuna_Installer.elf
+          files: OpenTuna_WILL_Installer.elf
