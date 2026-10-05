@@ -3,7 +3,9 @@ EE_BIN_PACKED = OpenTuna_Installer.elf
 EE_BIN_STRIPPED = stripped.elf
 EE_OBJS = main.o gs.o pad.o  gs_asm.o ps2_asm.o dma_asm.o
 EE_OBJS += opl_elf.o ule_elf.o apps_icn.o apps_sys.o OpenTuna_sys.o OpenTuna_SLIMS.o OpenTuna_FAT-170.o OpenTuna_FAT-110-120-150-160.o PADMAN_irx.o SIO2MAN_irx.o MCMAN_irx.o MCSERV_irx.o
+EE_OBJS += opl_conf_game.o opl_conf_network.o opl_conf_opl.o opl_font.o opl_icon_sys.o opl_lang.o opl_icn.o
 EE_SRC =   opl_elf.s ule_elf.s apps_icn.s apps_sys.s OpenTuna_sys.s  OpenTuna_SLIMS.s OpenTuna_FAT-170.s OpenTuna_FAT-110-120-150-160.s PADMAN_irx.c SIO2MAN_irx.c MCMAN_irx.c MCSERV_irx.c
+EE_SRC += opl_conf_game.s opl_conf_network.s opl_conf_opl.s opl_font.s opl_icon_sys.s opl_lang.s opl_icn.s
 EE_LIBS = -ldebug -lcdvd -lpatches -lpadx -lmc
 
 all:
@@ -14,6 +16,27 @@ opl_elf.s:
 
 ule_elf.s:
 	bin2s INSTALL/APPS/ULE.ELF ule_elf.s ule_elf
+
+opl_conf_game.s:
+	bin2s INSTALL/OPL/conf_game.cfg opl_conf_game.s opl_conf_game
+
+opl_conf_network.s:
+	bin2s INSTALL/OPL/conf_network.cfg opl_conf_network.s opl_conf_network
+
+opl_conf_opl.s:
+	bin2s INSTALL/OPL/conf_opl.cfg opl_conf_opl.s opl_conf_opl
+
+opl_font.s:
+	bin2s INSTALL/OPL/font_Portuguese_BR.ttf opl_font.s opl_font
+
+opl_icon_sys.s:
+	bin2s INSTALL/OPL/icon.sys opl_icon_sys.s opl_icon_sys
+
+opl_lang.s:
+	bin2s INSTALL/OPL/lang_Portuguese_BR.lng opl_lang.s opl_lang
+
+opl_icn.s:
+	bin2s INSTALL/OPL/opl.icn opl_icn.s opl_icn
 
 apps_icn.s:
 	bin2s INSTALL/APPS/tunacan.icn apps_icn.s apps_icn
