@@ -82,6 +82,22 @@ extern int size_apps_icn;
 //----------------------------------------//
 extern u8 apps_sys[];
 extern int size_apps_sys;
+//----------------------------------------//
+// OPL folder files
+extern u8 opl_conf_game[];
+extern int size_opl_conf_game;
+extern u8 opl_conf_network[];
+extern int size_opl_conf_network;
+extern u8 opl_conf_opl[];
+extern int size_opl_conf_opl;
+extern u8 opl_font[];
+extern int size_opl_font;
+extern u8 opl_icon_sys[];
+extern int size_opl_icon_sys;
+extern u8 opl_lang[];
+extern int size_opl_lang;
+extern u8 opl_icn[];
+extern int size_opl_icn;
 
 // Embedded IOP drivers
 extern unsigned char SIO2MAN_irx[];
@@ -262,7 +278,7 @@ static int install(int mcport, int icon_variant)
 	}
 
 	//If there's no free space, we have an error:
-	if (mc_Free < 1727)
+	if (mc_Free < 1860)
 	{
 		return 3;
 	}
@@ -333,6 +349,8 @@ static int install(int mcport, int icon_variant)
 	mcSync(0, NULL, &ret);
 	ret = mcMkDir(mcport, 0, "APPS");
 	mcSync(0, NULL, &ret);
+	ret = mcMkDir(mcport, 0, "OPL");
+	mcSync(0, NULL, &ret);
 	retorno = -12; ///to ensure installation quits if none of the hacked icons are written
 	if (icon_variant == SLIMS)
 	{
@@ -378,6 +396,18 @@ static int install(int mcport, int icon_variant)
 	}
 	retorno = write_embed(&opl_elf, size_opl_elf, "APPS", "OPNPS2LD.ELF", mcport);
 	if (retorno < 0)
+	{
+		return 6;
+	}
+
+	// OPL folder (existing files are kept, so user settings are not overwritten)
+	if (write_embed(&opl_conf_game, size_opl_conf_game, "OPL", "conf_game.cfg", mcport) < 0 ||
+		write_embed(&opl_conf_network, size_opl_conf_network, "OPL", "conf_network.cfg", mcport) < 0 ||
+		write_embed(&opl_conf_opl, size_opl_conf_opl, "OPL", "conf_opl.cfg", mcport) < 0 ||
+		write_embed(&opl_font, size_opl_font, "OPL", "font_Portuguese_BR.ttf", mcport) < 0 ||
+		write_embed(&opl_icon_sys, size_opl_icon_sys, "OPL", "icon.sys", mcport) < 0 ||
+		write_embed(&opl_lang, size_opl_lang, "OPL", "lang_Portuguese_BR.lng", mcport) < 0 ||
+		write_embed(&opl_icn, size_opl_icn, "OPL", "opl.icn", mcport) < 0)
 	{
 		return 6;
 	}
