@@ -10,17 +10,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: ps2dev/ps2dev:v1.2.0
     steps:
-      - name: Install dependencies
-        run: |
-          apk add build-base git zip
       - uses: actions/checkout@v4
-      - run: |
-          git fetch --prune --unshallow
+        with:
+          fetch-depth: 0
       - name: Compile
         run: |
-          make
+          docker run --rm -v "$PWD:/src" -w /src ps2dev/ps2dev:v1.2.0 sh -c \
+            "apk add build-base git zip && git config --global --add safe.directory /src && make"
 
       - name: Get short SHA
         id: slug
