@@ -252,6 +252,34 @@ static int write_embed(void *embed_file, const int embed_size, char *folder, cha
 }
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //return 0 = ok, return 1 = error
+#define INSTALL_STEPS 17
+
+// Draws the installation progress bar below the "Installing..." text (step 0..INSTALL_STEPS)
+static void draw_progress(int step)
+{
+	const int bar_w = 300, bar_h = 16;
+	int x0 = (gs_get_max_x() - 640) / 2 + (640 - bar_w) / 2;
+	int y0 = (gs_get_max_y() - 448) / 2 + 360;
+	int fill;
+
+	if (step > INSTALL_STEPS)
+		step = INSTALL_STEPS;
+	fill = (bar_w - 4) * step / INSTALL_STEPS;
+
+	// white border
+	gs_set_fill_color(255, 255, 255);
+	gs_fill_rect(x0, y0, x0 + bar_w - 1, y0 + bar_h - 1);
+	// black background
+	gs_set_fill_color(0, 0, 0);
+	gs_fill_rect(x0 + 2, y0 + 2, x0 + bar_w - 3, y0 + bar_h - 3);
+	// tuna colored fill
+	if (fill > 0)
+	{
+		gs_set_fill_color(224, 176, 112);
+		gs_fill_rect(x0 + 2, y0 + 2, x0 + 1 + fill, y0 + bar_h - 3);
+	}
+}
+
 static int install(int mcport, int icon_variant)
 {
 	char version_manifest_path[64];
@@ -289,6 +317,8 @@ static int install(int mcport, int icon_variant)
 		DeleteFolder(temp_path);
 	sprintf(temp_path,"mc%u:OPENTUNA", mcport);
 		DeleteFolder(temp_path);
+	int step = 0;
+	draw_progress(step);
     
 	//If the files exists, we have an error:
 	if (mcport == 0)
@@ -345,12 +375,14 @@ static int install(int mcport, int icon_variant)
 			return 5;
 		}
 	}
+	draw_progress(++step);
 	ret = mcMkDir(mcport, 0, "OPENTUNA");
 	mcSync(0, NULL, &ret);
 	ret = mcMkDir(mcport, 0, "APPS");
 	mcSync(0, NULL, &ret);
 	ret = mcMkDir(mcport, 0, "OPL");
 	mcSync(0, NULL, &ret);
+	draw_progress(++step);
 	retorno = -12; ///to ensure installation quits if none of the hacked icons are written
 	if (icon_variant == SLIMS)
 	{
@@ -368,49 +400,60 @@ static int install(int mcport, int icon_variant)
 	{
 		return 6;
 	}
+	draw_progress(++step);
 	// <FILES SHARED BY ALL ICONS FROM NOW ON>
 	retorno = write_embed(&opentuna_sys, size_opentuna_sys, "OPENTUNA", "icon.sys", mcport);
 	if (retorno < 0)
 	{
 		return 6;
 	}
+	draw_progress(++step);
 	if ((fd = open(version_manifest_path, O_CREAT | O_WRONLY | O_TRUNC)) >= 0){
 
 	ret = write(fd, ICONTYPE_ALIAS[icon_variant], 4);//This will allow identifying the hacked icon variant without risking your mc contents
 	close(fd);
 	}
+	draw_progress(++step);
 	retorno = write_embed(&apps_sys, size_apps_sys, "APPS", "icon.sys", mcport);
 	if (retorno < 0)
 	{
 		return 6;
 	}
+	draw_progress(++step);
 	retorno = write_embed(&apps_icn, size_apps_icn, "APPS", "tunacan.icn", mcport);
 	if (retorno < 0)
 	{
 		return 6;
 	}
+	draw_progress(++step);
 	retorno = write_embed(&ule_elf, size_ule_elf, "APPS", "ULE.ELF", mcport);
 	if (retorno < 0)
 	{
 		return 6;
 	}
+	draw_progress(++step);
 	retorno = write_embed(&opl_elf, size_opl_elf, "APPS", "OPNPS2LD.ELF", mcport);
 	if (retorno < 0)
 	{
 		return 6;
 	}
+	draw_progress(++step);
 
 	// OPL folder (existing files are kept, so user settings are not overwritten)
-	if (write_embed(&opl_conf_game, size_opl_conf_game, "OPL", "conf_game.cfg", mcport) < 0 ||
-		write_embed(&opl_conf_network, size_opl_conf_network, "OPL", "conf_network.cfg", mcport) < 0 ||
-		write_embed(&opl_conf_opl, size_opl_conf_opl, "OPL", "conf_opl.cfg", mcport) < 0 ||
-		write_embed(&opl_font, size_opl_font, "OPL", "font_Portuguese_BR.ttf", mcport) < 0 ||
-		write_embed(&opl_icon_sys, size_opl_icon_sys, "OPL", "icon.sys", mcport) < 0 ||
-		write_embed(&opl_lang, size_opl_lang, "OPL", "lang_Portuguese_BR.lng", mcport) < 0 ||
-		write_embed(&opl_icn, size_opl_icn, "OPL", "opl.icn", mcport) < 0)
-	{
-		return 6;
-	}
+#define WRITE_OPL(var, fname)                                                \
+	if (write_embed(&var, size_##var, "OPL", fname, mcport) < 0)             \
+	{                                                                        \
+		return 6;                                                            \
+	}                                                                        \
+	draw_progress(++step);
+	WRITE_OPL(opl_conf_game, "conf_game.cfg")
+	WRITE_OPL(opl_conf_network, "conf_network.cfg")
+	WRITE_OPL(opl_conf_opl, "conf_opl.cfg")
+	WRITE_OPL(opl_font, "font_Portuguese_BR.ttf")
+	WRITE_OPL(opl_icon_sys, "icon.sys")
+	WRITE_OPL(opl_lang, "lang_Portuguese_BR.lng")
+	WRITE_OPL(opl_icn, "opl.icn")
+#undef WRITE_OPL
 
 	PRINTF("installation finished\n");
 
@@ -428,6 +471,7 @@ static int install(int mcport, int icon_variant)
 	mcDirAAA->_Create = maximahora;
 	mcSetFileInfo(mcport, 0, "OPENTUNA", mcDirAAA, 0x02);
 	mcSync(0, NULL, &ret);
+	draw_progress(INSTALL_STEPS);
 
 	PRINTF("timestamp changed\n");
 
